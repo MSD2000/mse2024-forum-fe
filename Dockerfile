@@ -26,7 +26,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose the port on which the server will run
-EXPOSE 8080
+EXPOSE 8081
 
 # Start the nginx server
 CMD ["nginx", "-g", "daemon off;"]

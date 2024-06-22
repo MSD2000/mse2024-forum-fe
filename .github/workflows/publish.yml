@@ -1,0 +1,47 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Remove existing Docker image
+        run: |
+          docker rmi ${{ secrets.DOCKER_USERNAME }}/mse2024-forum-fe:latest || true
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/mse2024-forum-fe:latest
+          context: .
+          file: ./Dockerfile
+
+      - name: Log out of Docker Hub
+        if: always()
+        run: docker logout
+
+      - name: Trigger workflow in infra repository
+        uses: octokit/request-action@v2.x
+        with:
+         route: POST /repos/:owner/:repo/dispatches
+         owner: teodossidossev
+         repo: ci-infra
+         event_type: trigger-uat-event
+         client_payload: '{"ref":"main","description":"Triggered from ci-frontend"}'
+         mediaType: '{"previews": ["flash"]}'
+        env:
+         GITHUB_TOKEN: ${{ secrets.CI_INFRA_TOKEN }}
