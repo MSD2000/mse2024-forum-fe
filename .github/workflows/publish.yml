@@ -39,9 +39,9 @@ jobs:
         with:
          route: POST /repos/:owner/:repo/dispatches
          owner: ${{ secrets.DOCKER_USERNAME }}
-         repo: ci-infra
+         repo: mse2024-forum-infra
          event_type: trigger-uat-event
-         client_payload: '{"ref":"main","description":"Triggered from ci-frontend"}'
+         client_payload: '{"ref":"main","description":"Triggered from mse2024-forum-fe"}'
          mediaType: '{"previews": ["flash"]}'
         env:
          GITHUB_TOKEN: ${{ secrets.FORUM_INFRA_TOKEN }}
