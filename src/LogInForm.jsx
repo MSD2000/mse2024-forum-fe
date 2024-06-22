@@ -7,10 +7,15 @@ const LogInForm = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:7211/users/${username}/${password}`);
+      const response = await fetch(`http://localhost:8080/users/${username}`);
       if (response.ok) {
-        // Login successful
-        onLogin(username); // Pass the username to onLogin
+        // Parse the JSON response
+        const user = await response.json();
+        
+        if(user.username == username && user.password == password)
+          onLogin(username);
+        
+        
       } else {
         // Login failed
         console.error('Login failed');

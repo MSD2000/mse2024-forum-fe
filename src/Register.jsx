@@ -5,7 +5,7 @@ const Register = () => {
     username: '',
     email: '',
     password: '',
-    userNames: '',
+    name: '',
     role: 'User'
   });
 
@@ -20,7 +20,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:7211/users', {
+      const response = await fetch('http://localhost:8080/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -56,8 +56,8 @@ const Register = () => {
           <input type="password" className="form-control" id="password" name="password" value={formData.password} onChange={handleChange} />
         </div>
         <div className="mb-3">
-          <label htmlFor="userNames" className="form-label">Full Name</label>
-          <input type="text" className="form-control" id="userNames" name="userNames" value={formData.userNames} onChange={handleChange} />
+          <label htmlFor="name" className="form-label">Full Name</label>
+          <input type="text" className="form-control" id="name" name="name" value={formData.name} onChange={handleChange} />
         </div>
         <button type="submit" className="btn btn-primary">Submit</button>
       </form>

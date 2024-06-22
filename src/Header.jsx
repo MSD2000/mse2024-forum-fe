@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
@@ -15,7 +14,7 @@ const Header = () => {
 
   const handleLogout = () => {
     document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    navigate('/login');
+    window.location.href = "/login";
   };
 
   useEffect(() => {
@@ -23,7 +22,7 @@ const Header = () => {
       const username = getCookie('user');
       if (username) {
         try {
-          const response = await fetch(`http://localhost:7211/users/${username}`);
+          const response = await fetch(`http://localhost:8080/users/${username}`);
           if (response.ok) {
             const data = await response.json();
             setUser(username);

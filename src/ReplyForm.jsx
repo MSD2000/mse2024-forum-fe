@@ -11,41 +11,37 @@ const ReplyForm = ({ topicID, onReplySubmit }) => {
     return null;
   };
 
-  const user = getCookie('user');
+  const username = getCookie('user');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    try {
-      const response = await fetch(`http://localhost:7211/users/${user}`);
-      if (response.ok) {
-        const userData = await response.json();
-        const userID = userData.userID;
-        const reply = {
-          description: replyText,
-          topicID: topicID,
-          userID: userID
-        };
-        const postResponse = await fetch('http://localhost:7211/replies', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(reply)
-        });
-        if (postResponse.ok) {
-          console.log('Reply added successfully');
-          setReplyText('');
-          onReplySubmit(); // Trigger the callback to fetch latest replies
-        } else {
-          console.error('Failed to add reply');
-        }
-      } else {
-        console.error('Failed to fetch user data');
-      }
-    } catch (error) {
-      console.error('Error:', error);
+    const timeElapsed = Date.now();
+    const today = new Date(timeElapsed);
+    
+    const reply = {
+      description: replyText,
+      topicId: topicID,
+      username: username,
+      created: today.toISOString(),
+      modified: today.toISOString()
+
+    };
+    const postResponse = await fetch('http://localhost:8080/replies', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(reply)
+    });
+    if (postResponse.ok) {
+      console.log('Reply added successfully');
+      setReplyText('');
+      onReplySubmit(); // Trigger the callback to fetch latest replies
+    } else {
+      console.error('Failed to add reply');
     }
+
   };
 
   return (

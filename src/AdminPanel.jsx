@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 const AdminPanel = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(2);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(1);
   const [userRole, setUserRole] = useState('');
   const [user, setUser] = useState(null);
 
@@ -18,7 +18,7 @@ const AdminPanel = () => {
 
   const fetchUsers = async (page, pageSize) => {
     try {
-      const response = await fetch(`http://localhost:7211/users?page=${page}&pageSize=${pageSize}`);
+      const response = await fetch(`http://localhost:8080/users?page=${page}&pageSize=${pageSize}`);
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -39,7 +39,7 @@ const AdminPanel = () => {
   const handleSave = async (index) => {
     const userToUpdate = users[index];
     try {
-      const response = await fetch(`http://localhost:7211/users/${userToUpdate.username}`, {
+      const response = await fetch(`http://localhost:8080/users/${userToUpdate.username}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -61,7 +61,7 @@ const AdminPanel = () => {
       const username = getCookie('user');
       if (username) {
         try {
-          const response = await fetch(`http://localhost:7211/users/${username}`);
+          const response = await fetch(`http://localhost:8080/users/${username}`);
           if (response.ok) {
             const data = await response.json();
             setUser(username);
@@ -128,8 +128,8 @@ const AdminPanel = () => {
       <div className="d-flex justify-content-between">
         <button
           className="btn btn-primary"
-          onClick={() => setPage((prevPage) => Math.max(prevPage - 1, 1))}
-          disabled={page === 1}
+          onClick={() => setPage((prevPage) => Math.max(prevPage - 1, 0))}
+          disabled={page === 0}
         >
           Previous
         </button>

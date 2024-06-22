@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 const NewTopic = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [userID, setUserID] = useState(null);
   const navigate = useNavigate();
 
   const getCookie = (name) => {
@@ -14,42 +13,39 @@ const NewTopic = () => {
     return null;
   };
 
-  const user = getCookie('user');
+  const username = getCookie('user');
 
   useEffect(() => {
-    if (!user) {
+    if (!username) {
       navigate('/login');
       return;
     }
-
-    const fetchUserID = async () => {
-      try {
-        const response = await fetch(`http://localhost:7211/users/${user}`);
-        if (response.ok) {
-          const userData = await response.json();
-          setUserID(userData.userID);
-        } else {
-          console.error('Failed to fetch user ID');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    fetchUserID();
-  }, [user, navigate]);
+  }, [username, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const id = 0;
+    const views = 0;
+    const timeElapsed = Date.now();
+    const today = new Date(timeElapsed);
+    const created = today.toISOString();
+    const modified = today.toISOString();
+
     const newTopic = {
+      id,
       title,
       description,
-      userID
+      views,
+      username,
+      created,
+      modified
     };
 
+    console.log(JSON.stringify(newTopic));
+
     try {
-      const response = await fetch('http://localhost:7211/topics', {
+      const response = await fetch('http://localhost:8080/topics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

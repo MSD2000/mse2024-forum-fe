@@ -8,7 +8,7 @@ const TopicDetails = () => {
   const [replies, setReplies] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [editingTopic, setEditingTopic] = useState(false);
   const [editTopicText, setEditTopicText] = useState('');
   const [editingReply, setEditingReply] = useState(null);
@@ -16,21 +16,22 @@ const TopicDetails = () => {
   const pageSize = 2;
 
   useEffect(() => {
+
     const fetchTopic = async () => {
       try {
-        const response = await fetch(`http://localhost:7211/topics/${id}`);
+        const response = await fetch(`http://localhost:8080/topics/${id}`);
         if (response.ok) {
           const data = await response.json();
           setTopic(data);
-          setEditTopicText(data.topic.description);
-          await fetch(`http://localhost:7211/topics/${id}`, {
+          setEditTopicText(data.description);
+          await fetch(`http://localhost:8080/topics/${id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              ...data.topic,
-              views: data.topic.views + 1
+              ...data,
+              views: data.views + 1
             })
           });
         } else {
@@ -43,7 +44,7 @@ const TopicDetails = () => {
 
     const fetchReplies = async (page) => {
       try {
-        const response = await fetch(`http://localhost:7211/replies/${id}?page=${page}&pageSize=${pageSize}`);
+        const response = await fetch(`http://localhost:8080/replies/${id}?page=${page}&pageSize=${pageSize}`);
         if (response.ok) {
           const data = await response.json();
           setReplies(data);
@@ -65,7 +66,7 @@ const TopicDetails = () => {
       if (userCookie) {
         const username = userCookie.split('=')[1];
         try {
-          const response = await fetch(`http://localhost:7211/users/${username}`);
+          const response = await fetch(`http://localhost:8080/users/${username}`);
           if (response.ok) {
             const userData = await response.json();
             setCurrentUser(userData);
@@ -82,46 +83,34 @@ const TopicDetails = () => {
     getUser();
   }, [id, currentPage]);
 
-  const handleDeleteReply = async (replyID) => {
-    try {
-      const response = await fetch(`http://localhost:7211/replies/${replyID}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        setReplies((prevReplies) => prevReplies.filter(reply => reply.reply.replyID !== replyID));
-      } else {
-        console.error('Failed to delete reply');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
   const handleEditReply = (reply) => {
-    setEditingReply(reply.reply.replyID);
-    setEditText(reply.reply.description);
+    setEditingReply(reply.id);
+    setEditText(reply.description);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+
+    const editReply = {
+      description: editText,
+      topicId: id,
+      username: currentUser.username,
+      id: editingReply,
+      created: replies.find(reply => reply.id === editingReply).created,
+      modified: new Date().toISOString()
+    }
+
     try {
-      const response = await fetch(`http://localhost:7211/replies/${editingReply}`, {
+      const response = await fetch(`http://localhost:8080/replies/${editingReply}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          description: editText,
-          topicID: id,
-          userID: currentUser.userID,
-          replyID: editingReply,
-          created: replies.find(reply => reply.reply.replyID === editingReply).reply.created,
-          modified: new Date().toISOString()
-        })
+        body: JSON.stringify(editReply)
       });
       if (response.ok) {
         setReplies((prevReplies) => prevReplies.map(reply => 
-          reply.reply.replyID === editingReply ? { ...reply, reply: { ...reply.reply, description: editText } } : reply
+          reply.id === editingReply ? { ...reply, reply: { ...reply, description: editText } } : reply
         ));
         setEditingReply(null);
         setEditText('');
@@ -145,13 +134,13 @@ const TopicDetails = () => {
   const handleEditTopicSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:7211/topics/${id}`, {
+      const response = await fetch(`http://localhost:8080/topics/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          ...topic.topic,
+          ...topic,
           description: editTopicText,
           modified: new Date().toISOString()
         })
@@ -159,10 +148,7 @@ const TopicDetails = () => {
       if (response.ok) {
         setTopic((prevTopic) => ({
           ...prevTopic,
-          topic: {
-            ...prevTopic.topic,
-            description: editTopicText
-          }
+          description: editTopicText
         }));
         setEditingTopic(false);
       } else {
@@ -175,22 +161,7 @@ const TopicDetails = () => {
 
   const handleCancelEditTopic = () => {
     setEditingTopic(false);
-    setEditTopicText(topic.topic.description);
-  };
-
-  const handleDeleteTopic = async () => {
-    try {
-      const response = await fetch(`http://localhost:7211/topics/${id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        document.location.href = '/topics' // Redirect to home page or topics list after deletion
-      } else {
-        console.error('Failed to delete topic');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
+    setEditTopicText(topic.description);
   };
 
   const handlePageChange = (page) => {
@@ -199,7 +170,7 @@ const TopicDetails = () => {
 
   const fetchReplies = async (page) => {
     try {
-      const response = await fetch(`http://localhost:7211/replies/${id}?page=${page}&pageSize=${pageSize}`);
+      const response = await fetch(`http://localhost:8080/replies/${id}?page=${page}&pageSize=${pageSize}`);
       if (response.ok) {
         const data = await response.json();
         setReplies(data);
@@ -219,7 +190,7 @@ const TopicDetails = () => {
     return <div>Loading...</div>;
   }
 
-  const userCanEditDelete = (authorID) => {
+  const userCanEdit = (authorID) => {
     return currentUser && (currentUser.role === 'Moderator' || currentUser.role === 'Administrator' || currentUser.userID === authorID);
   };
 
@@ -229,21 +200,15 @@ const TopicDetails = () => {
         <div className='w-50 m-3'>
           <div className='card mb-3'>
             <div className='card-header'>
-              <h2 className="card-title">{topic.topic.title}</h2>
-              <p className="card-text">Created by: {topic.user.userNames} | {new Date(topic.topic.created).toLocaleString()} | {topic.topic.views} view(s)</p>
-              {userCanEditDelete(topic.topic.userID) && (
+              <h2 className="card-title">{topic.title}</h2>
+              <p className="card-text">Created by: {topic.userName} | {new Date(topic.created).toLocaleString()} | {topic.views} view(s)</p>
+              {userCanEdit(topic.username) && (
                 <>
                   <button 
                     onClick={handleEditTopic} 
                     className="btn btn-warning btn-sm"
                   >
                     Edit
-                  </button>
-                  <button 
-                    onClick={handleDeleteTopic} 
-                    className="btn btn-danger btn-sm ms-2"
-                  >
-                    Delete
                   </button>
                 </>
               )}
@@ -264,7 +229,7 @@ const TopicDetails = () => {
                   <button type="button" onClick={handleCancelEditTopic} className="btn btn-secondary ms-2">Cancel</button>
                 </form>
               ) : (
-                <p className="card-text">{topic.topic.description}</p>
+                <p className="card-text">{topic.description}</p>
               )}
             </div>
           </div>
@@ -274,10 +239,10 @@ const TopicDetails = () => {
           <hr/>
 
           {replies.map((reply) => (
-            <div key={reply.reply.replyID} className="card mb-3">
+            <div key={reply.id} className="card mb-3">
               <div className='card-header'>
-                <p className="card-text">Replied by: {reply.user.userNames} | {new Date(reply.reply.created).toLocaleString()}</p>
-                {userCanEditDelete(reply.reply.userID) && (
+                <p className="card-text">Replied by: {reply.username} | {new Date(reply.created).toLocaleString()}</p>
+                {userCanEdit(reply.userID) && (
                   <>
                     <button 
                       onClick={() => handleEditReply(reply)} 
@@ -285,17 +250,11 @@ const TopicDetails = () => {
                     >
                       Edit
                     </button>
-                    <button 
-                      onClick={() => handleDeleteReply(reply.reply.replyID)} 
-                      className="btn btn-danger btn-sm ms-2"
-                    >
-                      Delete
-                    </button>
                   </>
                 )}
               </div>
               <div className="card-body">
-                {editingReply === reply.reply.replyID ? (
+                {editingReply === reply.id ? (
                   <form onSubmit={handleEditSubmit}>
                     <div className="mb-3">
                       <textarea
@@ -310,7 +269,7 @@ const TopicDetails = () => {
                     <button type="button" onClick={handleCancelEdit} className="btn btn-secondary ms-2">Cancel</button>
                   </form>
                 ) : (
-                  <p className="card-text">{reply.reply.description}</p>
+                  <p className="card-text">{reply.description}</p>
                 )}
               </div>
             </div>
@@ -320,7 +279,7 @@ const TopicDetails = () => {
             <button
               className="btn btn-primary me-5"
               onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
+              disabled={currentPage === 0}
             >
               Previous
             </button>
